@@ -26,7 +26,7 @@ class ContactForm(BaseModel):
 async def send_mail(form_data: ContactForm):
     try:
         params = {
-            "from": "Portfolio Contact <onboarding@resend.dev>",
+            "from": "EckeEcke.github.io <onboarding@resend.dev>",
             "to": [MY_MAIL],
             "subject": f"Neue Nachricht von {form_data.name}",
             "html": f"""
