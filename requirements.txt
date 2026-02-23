@@ -1,4 +1,5 @@
 fastapi
 uvicorn
+resend
 pydantic[email]
 python-multipart

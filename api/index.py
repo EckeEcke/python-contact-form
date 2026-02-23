@@ -1,8 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, EmailStr
 from fastapi.middleware.cors import CORSMiddleware
+import resend
+import os
 
 app = FastAPI()
+
+resend.api_key = os.environ.get("RESEND_API_KEY")
+MY_MAIL = os.environ.get("MY_MAIL")
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,11 +22,24 @@ class ContactForm(BaseModel):
     email: EmailStr
     message: str
 
-@app.get("/api/health")
-def health_check():
-    return {"status": "Backend is running on Vercel"}
-
 @app.post("/api/send-mail")
-async def receive_contact(form_data: ContactForm):
-    print(f"Received: {form_data.name}")
-    return {"status": "success", "received": form_data.name}
+async def send_mail(form_data: ContactForm):
+    try:
+        params = {
+            "from": "Portfolio Contact <onboarding@resend.dev>",
+            "to": [MY_MAIL],
+            "subject": f"Neue Nachricht von {form_data.name}",
+            "html": f"""
+                <h3>Neue Kontaktanfrage</h3>
+                <p><strong>Name:</strong> {form_data.name}</p>
+                <p><strong>Email:</strong> {form_data.email}</p>
+                <p><strong>Nachricht:</strong></p>
+                <p>{form_data.message}</p>
+            """
+        }
+        
+        email = resend.Emails.send(params)
+        return {"status": "success", "id": email["id"]}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
